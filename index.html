@@ -1,319 +1,116 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Schadendokumentation Miettransporter</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, Helvetica, sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fahrzeuge</title>
 
-    body {
-      margin: 0;
-      background: #f4f6f8;
-      color: #1f2937;
-    }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    header {
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 24px 32px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
+<style>
+body { font-family: Arial; margin:0; background:#f4f6f8; }
 
-    h1 {
-      margin: 0;
-      font-size: 28px;
-    }
+header {
+  background:white;
+  padding:15px;
+  border-bottom:1px solid #ddd;
+  display:flex;
+  justify-content:space-between;
+}
 
-    .sub {
-      margin-top: 6px;
-      color: #6b7280;
-      font-size: 14px;
-    }
+main { padding:20px; max-width:900px; margin:auto; }
 
-    main {
-      padding: 32px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-
-    .search-box input,
-    .filter-box select {
-      padding: 12px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      background: white;
-      min-width: 220px;
-      font-size: 14px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 20px;
-      padding: 22px;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.04);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      cursor: pointer;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 32px rgba(0,0,0,0.07);
-    }
-
-    .status-bar {
-      height: 8px;
-      border-radius: 999px;
-      margin-bottom: 18px;
-    }
-
-    .vehicle-name {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .plate {
-      color: #4b5563;
-      font-size: 15px;
-      margin-bottom: 18px;
-    }
-
-    .meta {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 18px;
-      font-size: 14px;
-      color: #374151;
-    }
-
-    .badge-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .badge {
-      background: #eef2ff;
-      color: #3730a3;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 600;
-    }
-
-    .badge.gray {
-      background: #f3f4f6;
-      color: #374151;
-    }
-
-    .open-btn {
-      margin-top: 4px;
-      width: 100%;
-      padding: 12px 14px;
-      border: none;
-      border-radius: 12px;
-      background: #111827;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .open-btn:hover {
-      background: #1f2937;
-    }
-
-    .loading, .error, .empty {
-      padding: 24px;
-      background: white;
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .error {
-      color: #991b1b;
-      background: #fef2f2;
-      border-color: #fecaca;
-    }
-  </style>
+.card {
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+</style>
 </head>
+
 <body>
-  <header>
-    <h1>Schadendokumentation Miettransporter</h1>
-    <div class="sub">Verwaltung von Schäden, Reparaturen und Historie aller Inhofer-Sprinter</div>
-  </header>
 
-  <main>
-    <div class="topbar">
-      <div class="controls">
-        <div class="search-box">
-          <input id="searchInput" type="text" placeholder="Kennzeichen oder Fahrzeug suchen" />
-        </div>
-        <div class="filter-box">
-          <select id="statusFilter">
-            <option value="">Alle Status</option>
-            <option value="einsatzbereit">einsatzbereit</option>
-            <option value="schaeden_vorhanden">Schäden vorhanden</option>
-            <option value="werkstatt">Werkstatt / Prüfung</option>
-            <option value="nicht_im_einsatz">nicht im Einsatz</option>
-          </select>
-        </div>
-      </div>
-    </div>
+<header>
+<div>🚗 Fahrzeuge</div>
+<button onclick="logout()">Logout</button>
+</header>
 
-    <div id="app">
-      <div class="loading">Fahrzeuge werden geladen ...</div>
-    </div>
-  </main>
+<main>
 
-  <script>
-    const SUPABASE_URL = "https://iufkwovepjljycdulnwa.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY";
+<!-- LOGIN -->
+<div id="loginBox">
+<h2>Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Passwort"><br>
+<button onclick="login()">Login</button>
+</div>
 
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!-- APP -->
+<div id="app" style="display:none">
+<div id="vehicleList"></div>
+</div>
 
-    const app = document.getElementById("app");
-    const searchInput = document.getElementById("searchInput");
-    const statusFilter = document.getElementById("statusFilter");
+</main>
 
-    let vehicles = [];
+<script>
+const supabase = window.supabase.createClient(
+"https://iufkwovepjljycdulnwa.supabase.co",
+"DEIN_KEY"
+);
 
-    function getStatusColor(status) {
-      switch (status) {
-        case "einsatzbereit":
-          return "#16a34a";
-        case "schaeden_vorhanden":
-          return "#eab308";
-        case "werkstatt":
-          return "#dc2626";
-        case "nicht_im_einsatz":
-          return "#9ca3af";
-        default:
-          return "#3b82f6";
-      }
-    }
+// LOGIN
+async function login(){
+const { error } = await supabase.auth.signInWithPassword({
+email: document.getElementById("email").value,
+password: document.getElementById("password").value
+});
 
-    function formatStatus(status) {
-      switch (status) {
-        case "einsatzbereit":
-          return "einsatzbereit";
-        case "schaeden_vorhanden":
-          return "Schäden vorhanden";
-        case "werkstatt":
-          return "Werkstatt / Prüfung";
-        case "nicht_im_einsatz":
-          return "nicht im Einsatz";
-        default:
-          return status;
-      }
-    }
+if(error) return alert("Login Fehler");
 
-    function renderVehicles(list) {
-      if (!list.length) {
-        app.innerHTML = '<div class="empty">Keine Fahrzeuge gefunden.</div>';
-        return;
-      }
+startApp();
+}
 
-      app.innerHTML = `
-        <div class="grid">
-          ${list.map(vehicle => `
-            <div class="card" onclick="openVehicle(${vehicle.id})">
-              <div class="status-bar" style="background:${getStatusColor(vehicle.status)}"></div>
-              <div class="vehicle-name">${vehicle.name}</div>
-              <div class="plate">${vehicle.kennzeichen}</div>
+// LOGOUT
+async function logout(){
+await supabase.auth.signOut();
+location.reload();
+}
 
-              <div class="badge-row">
-                ${vehicle.is_reserve ? '<div class="badge gray">Reservefahrzeug</div>' : ''}
-                ${vehicle.is_reserve
-                  ? `<div class="badge gray">${vehicle.in_use ? 'im Einsatz' : 'nicht im Einsatz'}</div>`
-                  : ''
-                }
-              </div>
+// CHECK LOGIN
+async function checkUser(){
+const { data } = await supabase.auth.getSession();
+if(data.session) startApp();
+}
 
-              <div class="meta">
-                <div><strong>Status:</strong> ${formatStatus(vehicle.status)}</div>
-                <div><strong>Notiz:</strong> ${vehicle.note ? vehicle.note : 'Keine Notiz vorhanden'}</div>
-              </div>
+// START
+function startApp(){
+document.getElementById("loginBox").style.display="none";
+document.getElementById("app").style.display="block";
+loadVehicles();
+}
 
-              <button class="open-btn">Öffnen</button>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
+// LOAD VEHICLES
+async function loadVehicles(){
+const { data } = await supabase
+.from("vehicles")
+.select("*");
 
-    function applyFilters() {
-      const searchValue = searchInput.value.trim().toLowerCase();
-      const statusValue = statusFilter.value;
+document.getElementById("vehicleList").innerHTML = data.map(v=>`
+<div class="card" onclick="openVehicle(${v.id})">
+<b>${v.name}</b><br>
+${v.kennzeichen}
+</div>
+`).join("");
+}
 
-      const filtered = vehicles.filter(vehicle => {
-        const matchesSearch =
-          vehicle.name.toLowerCase().includes(searchValue) ||
-          vehicle.kennzeichen.toLowerCase().includes(searchValue);
+function openVehicle(id){
+location.href = "vehicle.html?id=" + id;
+}
 
-        const matchesStatus =
-          !statusValue || vehicle.status === statusValue;
+checkUser();
+</script>
 
-        return matchesSearch && matchesStatus;
-      });
-
-      renderVehicles(filtered);
-    }
-
-    async function loadVehicles() {
-      app.innerHTML = '<div class="loading">Fahrzeuge werden geladen ...</div>';
-
-      const { data, error } = await supabaseClient
-        .from("vehicles")
-        .select("*")
-        .order("kennzeichen", { ascending: true });
-
-      if (error) {
-        app.innerHTML = `<div class="error">Fehler beim Laden der Fahrzeuge: ${error.message}</div>`;
-        return;
-      }
-
-      vehicles = data || [];
-      renderVehicles(vehicles);
-    }
-
-    function openVehicle(vehicleId) {
-      window.location.href = `vehicle.html?id=${vehicleId}`;
-    }
-
-    searchInput.addEventListener("input", applyFilters);
-    statusFilter.addEventListener("change", applyFilters);
-
-    loadVehicles();
-  </script>
 </body>
 </html>
