@@ -88,11 +88,18 @@ const vehicleId = new URLSearchParams(window.location.search).get("id");
 const { data: vh } = await supabase.from("vehicle_history").select("*").eq("vehicle_id", vehicleId);
 const { data: dmg } = await supabase.from("damages").select("id").eq("vehicle_id", vehicleId);
 
-let dh=[];
-if(dmg){
-const ids=dmg.map(d=>d.id);
-const res = await supabase.from("damage_history").select("*").in("damage_id", ids);
-dh=res.data||[];
+let dh = [];
+
+if (dmg && dmg.length > 0) {
+
+  const ids = dmg.map(d => d.id);
+
+  const res = await supabase
+    .from("damage_history")
+    .select("*")
+    .in("damage_id", ids);
+
+  dh = res.data || [];
 }
 
 allData=[
