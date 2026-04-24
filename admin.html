@@ -29,11 +29,10 @@ header{
 .btn:hover{background:#1f2937}
 .btn.secondary{background:#e5e7eb;color:#111827}
 .btn.secondary:hover{background:#d1d5db}
-.btn.danger{background:#991b1b}
 .btn.warning{background:#92400e}
 .btn.success{background:#166534}
 .btn.small{padding:8px 10px;font-size:12px}
-main{max-width:1220px;margin:auto;padding:32px}
+main{max-width:1240px;margin:auto;padding:32px}
 .hero{margin-bottom:22px}
 .hero h1{margin:0;font-size:36px;letter-spacing:-.7px}
 .hero p{margin:8px 0 0;color:#64748b}
@@ -42,7 +41,7 @@ main{max-width:1220px;margin:auto;padding:32px}
   box-shadow:0 14px 34px rgba(15,23,42,.07)
 }
 .auth-card{border-radius:24px;padding:18px;margin-bottom:18px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
 .stat{border-radius:22px;padding:20px}
 .stat .label{font-size:13px;color:#64748b;margin-bottom:8px;font-weight:800}
 .stat strong{font-size:32px}
@@ -65,6 +64,9 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
 }
 .tag.admin{background:#dcfce7;color:#166534}
 .tag.inactive{background:#e5e7eb;color:#374151}
+.tag.damage{background:#fee2e2;color:#991b1b}
+.tag.repaired{background:#dcfce7;color:#166534}
+.tag.vehicle{background:#dbeafe;color:#1d4ed8}
 .error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:16px;padding:14px}
 .success-box{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:14px;margin-top:10px;display:none}
 .modal{
@@ -100,7 +102,7 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
 <main>
   <div class="hero">
     <h1>Administration</h1>
-    <p>Dashboard, Mitarbeiterverwaltung, Passwort-Reset und Sicherheitsprotokoll.</p>
+    <p>Dashboard, Mitarbeiterverwaltung, Passwort-Reset, Schäden-Log und Sicherheitsprotokoll.</p>
   </div>
 
   <div id="authBox" class="auth-card">Prüfe Anmeldung ...</div>
@@ -108,8 +110,10 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
   <div id="adminApp" style="display:none;">
     <div class="stats">
       <div class="stat"><div class="label">Fahrzeuge</div><strong id="vehicleCount">-</strong></div>
-      <div class="stat"><div class="label">Aktive Schäden</div><strong id="damageCount">-</strong></div>
+      <div class="stat"><div class="label">Offene Schäden</div><strong id="openDamageCount">-</strong></div>
+      <div class="stat"><div class="label">Reparierte Schäden</div><strong id="repairedDamageCount">-</strong></div>
       <div class="stat"><div class="label">Aktive Mitarbeiter</div><strong id="employeeCount">-</strong></div>
+      <div class="stat"><div class="label">Deaktiviert</div><strong id="inactiveEmployeeCount">-</strong></div>
       <div class="stat"><div class="label">Reset Logs</div><strong id="logCount">-</strong></div>
     </div>
 
@@ -149,7 +153,27 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
       </section>
 
       <section class="card">
-        <h2>Passwort-Reset Activity Log</h2>
+        <h2>Letzte Aktivitäten</h2>
+        <input id="activitySearch" placeholder="Aktivitäten suchen ...">
+        <select id="activityFilter">
+          <option value="all">Alle Aktivitäten</option>
+          <option value="damage">Nur Schäden</option>
+          <option value="vehicle">Nur Fahrzeugstatus</option>
+          <option value="reset">Nur Passwort/Admin</option>
+        </select>
+        <div id="activitiesBox" class="table">Lade Aktivitäten ...</div>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Schäden-Log</h2>
+        <input id="damageLogSearch" placeholder="Schäden suchen ...">
+        <div id="damageLogsBox" class="table">Lade Schäden-Log ...</div>
+      </section>
+
+      <section class="card">
+        <h2>Passwort/Admin Log</h2>
         <input id="logSearch" placeholder="Logs suchen ...">
         <div id="logsBox" class="table">Lade Logs ...</div>
       </section>
@@ -192,20 +216,25 @@ const SUPABASE_URL = "https://iufkwovepjljycdulnwa.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const ADMIN_EMAILS = [
-  "kevin.kurtaj@moebel-inhofer.de",
-  "kevinkurtaj@gmx.de"
-];
+let currentAdminEmail = "";
 
 const authBox = document.getElementById("authBox");
 const adminApp = document.getElementById("adminApp");
 const employeesBox = document.getElementById("employeesBox");
 const logsBox = document.getElementById("logsBox");
+const activitiesBox = document.getElementById("activitiesBox");
+const damageLogsBox = document.getElementById("damageLogsBox");
 const resetMsg = document.getElementById("resetMsg");
 const employeeMsg = document.getElementById("employeeMsg");
 
 let employees = [];
 let logs = [];
+let damageLogs = [];
+let vehicleLogs = [];
+let allActivities = [];
+let vehiclesMap = {};
+let employeesMap = {};
+let damagesMap = {};
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleString("de-DE") : "-";
@@ -215,6 +244,18 @@ function showBox(el, text, success = true) {
   el.className = success ? "success-box" : "error";
   el.style.display = "block";
   el.textContent = text;
+}
+
+function getEmployeeName(id) {
+  return employeesMap[id] || id || "Unbekannt";
+}
+
+function getVehicleName(id) {
+  return vehiclesMap[id] || ("Fahrzeug-ID " + id);
+}
+
+function getDamageInfo(id) {
+  return damagesMap[id] || { text: "Schaden-ID " + id, vehicle_id: null };
 }
 
 async function writeAdminLog(status, details, email = null) {
@@ -237,30 +278,79 @@ async function init() {
     return;
   }
 
-  const email = data.session.user.email;
+  currentAdminEmail = data.session.user.email;
 
-  if (!ADMIN_EMAILS.includes(email)) {
-    authBox.innerHTML = `<div class="error">Kein Admin-Zugriff für: <strong>${email}</strong></div>`;
+  const { data: adminEmployee, error: adminError } = await supabaseClient
+    .from("employees")
+    .select("*")
+    .eq("email", currentAdminEmail)
+    .maybeSingle();
+
+  if (adminError) {
+    authBox.innerHTML = `<div class="error">Admin-Prüfung fehlgeschlagen: ${adminError.message}</div>`;
     return;
   }
 
-  authBox.innerHTML = `👤 Angemeldet als Admin:<br><strong>${email}</strong>`;
+  const isAdmin = adminEmployee?.role === "admin";
+
+  if (!isAdmin) {
+    authBox.innerHTML = `<div class="error">Kein Admin-Zugriff für: <strong>${currentAdminEmail}</strong><br>Setze in der employees-Tabelle role = admin.</div>`;
+    return;
+  }
+
+  authBox.innerHTML = `👤 Angemeldet als Admin:<br><strong>${currentAdminEmail}</strong>`;
   adminApp.style.display = "block";
 
+  await loadAll();
+}
+
+async function loadAll() {
+  await loadMaps();
   await loadDashboard();
   await loadEmployees();
   await loadLogs();
+  await loadDamageLogs();
+  await loadVehicleLogs();
+  buildActivities();
+}
+
+async function loadMaps() {
+  const { data: vehicles } = await supabaseClient.from("vehicles").select("*");
+  vehiclesMap = {};
+  (vehicles || []).forEach(v => {
+    vehiclesMap[v.id] = `${v.name || "Fahrzeug"} ${v.kennzeichen ? "— " + v.kennzeichen : ""}`;
+  });
+
+  const { data: emps } = await supabaseClient.from("employees").select("*");
+  employeesMap = {};
+  (emps || []).forEach(e => {
+    employeesMap[e.id] = e.name || e.email || ("Mitarbeiter " + e.id);
+  });
+
+  const { data: damages } = await supabaseClient.from("damages").select("*");
+  damagesMap = {};
+  (damages || []).forEach(d => {
+    damagesMap[d.id] = {
+      text: `${d.damage_type || "Schaden"} / ${d.area || "-"} / ${d.severity || "-"}`,
+      vehicle_id: d.vehicle_id,
+      status: d.status
+    };
+  });
 }
 
 async function loadDashboard() {
   const vehicles = await supabaseClient.from("vehicles").select("id", { count: "exact", head: true });
-  const damages = await supabaseClient.from("damages").select("id", { count: "exact", head: true }).in("status", ["offen", "in_pruefung"]);
+  const openDamages = await supabaseClient.from("damages").select("id", { count: "exact", head: true }).in("status", ["offen", "in_pruefung"]);
+  const repairedDamages = await supabaseClient.from("damages").select("id", { count: "exact", head: true }).eq("status", "repariert");
   const emps = await supabaseClient.from("employees").select("id", { count: "exact", head: true }).eq("active", true);
+  const inactiveEmps = await supabaseClient.from("employees").select("id", { count: "exact", head: true }).eq("active", false);
   const resetLogs = await supabaseClient.from("password_reset_activity").select("id", { count: "exact", head: true });
 
   document.getElementById("vehicleCount").textContent = vehicles.count ?? "-";
-  document.getElementById("damageCount").textContent = damages.count ?? "-";
+  document.getElementById("openDamageCount").textContent = openDamages.count ?? "-";
+  document.getElementById("repairedDamageCount").textContent = repairedDamages.count ?? "-";
   document.getElementById("employeeCount").textContent = emps.count ?? "-";
+  document.getElementById("inactiveEmployeeCount").textContent = inactiveEmps.count ?? "-";
   document.getElementById("logCount").textContent = resetLogs.count ?? "-";
 }
 
@@ -287,6 +377,7 @@ async function sendReset(emailFromButton = null) {
 
   await loadLogs();
   await loadDashboard();
+  buildActivities();
 }
 
 async function createEmployee() {
@@ -301,12 +392,7 @@ async function createEmployee() {
     return;
   }
 
-  const insertData = {
-    name,
-    email: email || null,
-    role,
-    active: true
-  };
+  const insertData = { name, email: email || null, role, active: true };
 
   const { error } = await supabaseClient.from("employees").insert([insertData]);
 
@@ -322,15 +408,11 @@ async function createEmployee() {
   document.getElementById("newEmployeeEmail").value = "";
   document.getElementById("newEmployeeRole").value = "user";
 
-  await loadEmployees();
-  await loadDashboard();
+  await loadAll();
 }
 
 async function loadEmployees() {
-  const { data, error } = await supabaseClient
-    .from("employees")
-    .select("*")
-    .order("id", { ascending: true });
+  const { data, error } = await supabaseClient.from("employees").select("*").order("id", { ascending: true });
 
   if (error) {
     employeesBox.innerHTML = `<div class="error">${error.message}</div>`;
@@ -338,6 +420,8 @@ async function loadEmployees() {
   }
 
   employees = data || [];
+  employeesMap = {};
+  employees.forEach(e => employeesMap[e.id] = e.name || e.email || ("Mitarbeiter " + e.id));
   renderEmployees();
 }
 
@@ -421,17 +505,12 @@ async function saveEmployeeEdit() {
     return;
   }
 
-  const updateData = {
+  const { error } = await supabaseClient.from("employees").update({
     name,
     email: email || null,
     role,
     active
-  };
-
-  const { error } = await supabaseClient
-    .from("employees")
-    .update(updateData)
-    .eq("id", Number(id));
+  }).eq("id", Number(id));
 
   if (error) {
     alert("Fehler: " + error.message);
@@ -441,8 +520,7 @@ async function saveEmployeeEdit() {
   await writeAdminLog("employee_updated", "Mitarbeiter wurde bearbeitet: " + name, email || null);
 
   closeEditModal();
-  await loadEmployees();
-  await loadDashboard();
+  await loadAll();
 }
 
 async function toggleEmployeeActive(id, active) {
@@ -455,10 +533,7 @@ async function toggleEmployeeActive(id, active) {
 
   if (!confirm(question)) return;
 
-  const { error } = await supabaseClient
-    .from("employees")
-    .update({ active })
-    .eq("id", Number(id));
+  const { error } = await supabaseClient.from("employees").update({ active }).eq("id", Number(id));
 
   if (error) {
     alert("Fehler: " + error.message);
@@ -466,9 +541,7 @@ async function toggleEmployeeActive(id, active) {
   }
 
   await writeAdminLog(active ? "employee_activated" : "employee_deactivated", name, e?.email || null);
-
-  await loadEmployees();
-  await loadDashboard();
+  await loadAll();
 }
 
 async function loadLogs() {
@@ -501,6 +574,139 @@ function renderLogs() {
   `).join("") || "Keine Logs gefunden.";
 }
 
+async function loadDamageLogs() {
+  const { data, error } = await supabaseClient
+    .from("damage_history")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    damageLogsBox.innerHTML = `<div class="error">Schäden-Log konnte nicht geladen werden: ${error.message}</div>`;
+    return;
+  }
+
+  damageLogs = data || [];
+  renderDamageLogs();
+}
+
+function renderDamageLogs() {
+  const search = document.getElementById("damageLogSearch").value.toLowerCase().trim();
+
+  const data = damageLogs.filter(item => {
+    const damage = getDamageInfo(item.damage_id);
+    const vehicle = damage.vehicle_id ? getVehicleName(damage.vehicle_id) : "";
+    const employee = getEmployeeName(item.user_id);
+    const searchable = [item.action, item.details, item.damage_id, employee, vehicle, damage.text].join(" ").toLowerCase();
+    return !search || searchable.includes(search);
+  });
+
+  damageLogsBox.innerHTML = data.map(item => {
+    const damage = getDamageInfo(item.damage_id);
+    const vehicle = damage.vehicle_id ? getVehicleName(damage.vehicle_id) : "Unbekanntes Fahrzeug";
+    const employee = getEmployeeName(item.user_id);
+    const css = item.action === "repariert" ? "repaired" : "damage";
+
+    return `
+      <div class="row">
+        <div class="tag ${css}">${formatAction(item.action)}</div>
+        <div><strong>${damage.text}</strong></div>
+        <div class="small-text">Fahrzeug: ${vehicle}</div>
+        <div class="small-text">Mitarbeiter: ${employee}</div>
+        <div class="small-text">${formatDate(item.created_at)}</div>
+        <div style="margin-top:6px;">${item.details || "-"}</div>
+      </div>
+    `;
+  }).join("") || "Keine Schäden-Logs gefunden.";
+}
+
+async function loadVehicleLogs() {
+  const { data, error } = await supabaseClient
+    .from("vehicle_history")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    vehicleLogs = [];
+    return;
+  }
+
+  vehicleLogs = data || [];
+}
+
+function buildActivities() {
+  allActivities = [
+    ...damageLogs.map(item => {
+      const damage = getDamageInfo(item.damage_id);
+      const vehicle = damage.vehicle_id ? getVehicleName(damage.vehicle_id) : "";
+      return {
+        type: "damage",
+        time: item.created_at,
+        title: formatAction(item.action),
+        detail: `${damage.text} | ${vehicle}`,
+        person: getEmployeeName(item.user_id),
+        raw: item
+      };
+    }),
+    ...vehicleLogs.map(item => ({
+      type: "vehicle",
+      time: item.created_at,
+      title: "Fahrzeugstatus geändert",
+      detail: `${getVehicleName(item.vehicle_id)} | ${item.details || "-"}`,
+      person: getEmployeeName(item.user_id),
+      raw: item
+    })),
+    ...logs.map(item => ({
+      type: "reset",
+      time: item.created_at,
+      title: item.status || "Admin Log",
+      detail: item.details || "-",
+      person: item.email || "Unbekannt",
+      raw: item
+    }))
+  ];
+
+  allActivities.sort((a, b) => new Date(b.time) - new Date(a.time));
+  renderActivities();
+}
+
+function renderActivities() {
+  const search = document.getElementById("activitySearch").value.toLowerCase().trim();
+  const filter = document.getElementById("activityFilter").value;
+
+  const data = allActivities.filter(item => {
+    const searchable = [item.type, item.title, item.detail, item.person].join(" ").toLowerCase();
+    const matchesSearch = !search || searchable.includes(search);
+    const matchesFilter = filter === "all" || item.type === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  activitiesBox.innerHTML = data.slice(0, 100).map(item => {
+    const css = item.type === "damage" ? "damage" : (item.type === "vehicle" ? "vehicle" : "");
+    return `
+      <div class="row">
+        <div class="tag ${css}">${item.type === "damage" ? "Schaden" : item.type === "vehicle" ? "Fahrzeug" : "Admin"}</div>
+        <div><strong>${item.title}</strong></div>
+        <div>${item.detail}</div>
+        <div class="small-text">Von: ${item.person}</div>
+        <div class="small-text">${formatDate(item.time)}</div>
+      </div>
+    `;
+  }).join("") || "Keine Aktivitäten gefunden.";
+}
+
+function formatAction(action) {
+  switch (action) {
+    case "angelegt": return "Schaden angelegt";
+    case "bilder_hochgeladen": return "Bilder hochgeladen";
+    case "repariert": return "Schaden repariert";
+    case "irrtuemlich": return "Schaden irrtümlich";
+    case "bearbeitet": return "Schaden bearbeitet";
+    default: return action || "-";
+  }
+}
+
 async function logout() {
   await supabaseClient.auth.signOut();
   window.location.href = "index.html";
@@ -509,6 +715,9 @@ async function logout() {
 document.getElementById("employeeSearch").addEventListener("input", renderEmployees);
 document.getElementById("employeeFilter").addEventListener("change", renderEmployees);
 document.getElementById("logSearch").addEventListener("input", renderLogs);
+document.getElementById("damageLogSearch").addEventListener("input", renderDamageLogs);
+document.getElementById("activitySearch").addEventListener("input", renderActivities);
+document.getElementById("activityFilter").addEventListener("change", renderActivities);
 
 init();
 </script>
