@@ -10,7 +10,7 @@
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 body{
   margin:0;
-  background:radial-gradient(circle at top right,rgba(37,99,235,.16),transparent 35%),
+  background:radial-gradient(circle at top right,rgba(37,99,235,.18),transparent 35%),
   linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%);
   color:#111827;min-height:100vh
 }
@@ -26,10 +26,14 @@ header{
   border:none;background:#111827;color:white;padding:10px 14px;
   border-radius:12px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block
 }
+.btn:hover{background:#1f2937}
 .btn.secondary{background:#e5e7eb;color:#111827}
-.btn.danger{background:#991b1b;color:white}
+.btn.secondary:hover{background:#d1d5db}
+.btn.danger{background:#991b1b}
+.btn.warning{background:#92400e}
+.btn.success{background:#166534}
 .btn.small{padding:8px 10px;font-size:12px}
-main{max-width:1180px;margin:auto;padding:32px}
+main{max-width:1220px;margin:auto;padding:32px}
 .hero{margin-bottom:22px}
 .hero h1{margin:0;font-size:36px;letter-spacing:-.7px}
 .hero p{margin:8px 0 0;color:#64748b}
@@ -50,8 +54,9 @@ input,select{
   margin-bottom:10px;outline:none;background:white
 }
 input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.14)}
-.table{display:grid;gap:10px;max-height:520px;overflow:auto}
+.table{display:grid;gap:10px;max-height:560px;overflow:auto}
 .row{border:1px solid #e5e7eb;border-radius:16px;padding:13px;background:#f8fafc}
+.row.inactive{opacity:.55;background:#f1f5f9}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .small-text{font-size:12px;color:#64748b;margin-top:3px}
 .tag{
@@ -59,8 +64,9 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
   font-weight:900;background:#dbeafe;color:#1d4ed8;margin-bottom:7px
 }
 .tag.admin{background:#dcfce7;color:#166534}
+.tag.inactive{background:#e5e7eb;color:#374151}
 .error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:16px;padding:14px}
-.success{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:14px;margin-top:10px;display:none}
+.success-box{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:14px;margin-top:10px;display:none}
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,.45);
   display:none;align-items:center;justify-content:center;padding:20px;z-index:50
@@ -72,13 +78,17 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
 .modal-box h2{margin:0 0 16px}
 @media(max-width:850px){
   header{flex-direction:column;align-items:flex-start;gap:12px}
-  main{padding:20px}
+  main{padding:18px}
+  .hero h1{font-size:30px}
   .grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .card{padding:16px}
 }
 </style>
 </head>
 
 <body>
+
 <header>
   <div class="header-title">⚙️ Admin Panel</div>
   <div class="header-actions">
@@ -99,7 +109,7 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
     <div class="stats">
       <div class="stat"><div class="label">Fahrzeuge</div><strong id="vehicleCount">-</strong></div>
       <div class="stat"><div class="label">Aktive Schäden</div><strong id="damageCount">-</strong></div>
-      <div class="stat"><div class="label">Mitarbeiter</div><strong id="employeeCount">-</strong></div>
+      <div class="stat"><div class="label">Aktive Mitarbeiter</div><strong id="employeeCount">-</strong></div>
       <div class="stat"><div class="label">Reset Logs</div><strong id="logCount">-</strong></div>
     </div>
 
@@ -107,9 +117,9 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
       <h2>Passwort-Reset für Mitarbeiter</h2>
       <input id="resetEmail" type="email" placeholder="E-Mail-Adresse des Mitarbeiters">
       <button class="btn" onclick="sendReset()">Reset-Link senden</button>
-      <div id="resetMsg" class="success"></div>
+      <div id="resetMsg" class="success-box"></div>
       <div class="small-text" style="margin-top:10px;">
-        Hinweis: Aus Sicherheitsgründen wird kein Passwort direkt im Browser gesetzt. Der Mitarbeiter bekommt einen Reset-Link und vergibt selbst ein neues Passwort.
+        Der Mitarbeiter bekommt einen Reset-Link per E-Mail und vergibt selbst ein neues Passwort.
       </div>
     </section>
 
@@ -122,13 +132,19 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
         <option value="admin">Admin</option>
       </select>
       <button class="btn" onclick="createEmployee()">Mitarbeiter speichern</button>
-      <div id="employeeMsg" class="success"></div>
+      <div id="employeeMsg" class="success-box"></div>
     </section>
 
     <div class="grid">
       <section class="card">
         <h2>Mitarbeiter</h2>
         <input id="employeeSearch" placeholder="Mitarbeiter suchen ...">
+        <select id="employeeFilter">
+          <option value="all">Alle Mitarbeiter</option>
+          <option value="active">Nur aktive</option>
+          <option value="inactive">Nur deaktivierte</option>
+          <option value="admin">Nur Admins</option>
+        </select>
         <div id="employeesBox" class="table">Lade Mitarbeiter ...</div>
       </section>
 
@@ -145,16 +161,26 @@ input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,23
   <div class="modal-box">
     <h2>Mitarbeiter bearbeiten</h2>
     <input id="editId" type="hidden">
+
     <label>Name</label>
     <input id="editName">
+
     <label>E-Mail</label>
     <input id="editEmail" type="email">
+
     <label>Rolle</label>
     <select id="editRole">
       <option value="user">Mitarbeiter</option>
       <option value="admin">Admin</option>
     </select>
-    <div style="display:flex;gap:10px;margin-top:10px;">
+
+    <label>Status</label>
+    <select id="editActive">
+      <option value="true">aktiv</option>
+      <option value="false">deaktiviert</option>
+    </select>
+
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
       <button class="btn" onclick="saveEmployeeEdit()">Speichern</button>
       <button class="btn secondary" onclick="closeEditModal()">Abbrechen</button>
     </div>
@@ -166,7 +192,6 @@ const SUPABASE_URL = "https://iufkwovepjljycdulnwa.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Das ist deine einfache Admin-Rolle.
 const ADMIN_EMAILS = [
   "kevin.kurtaj@moebel-inhofer.de",
   "kevinkurtaj@gmx.de"
@@ -187,9 +212,21 @@ function formatDate(value) {
 }
 
 function showBox(el, text, success = true) {
-  el.className = success ? "success" : "error";
+  el.className = success ? "success-box" : "error";
   el.style.display = "block";
   el.textContent = text;
+}
+
+async function writeAdminLog(status, details, email = null) {
+  try {
+    await supabaseClient.from("password_reset_activity").insert([{
+      email,
+      status,
+      details
+    }]);
+  } catch (e) {
+    console.warn("Admin Log konnte nicht gespeichert werden:", e);
+  }
 }
 
 async function init() {
@@ -218,7 +255,7 @@ async function init() {
 async function loadDashboard() {
   const vehicles = await supabaseClient.from("vehicles").select("id", { count: "exact", head: true });
   const damages = await supabaseClient.from("damages").select("id", { count: "exact", head: true }).in("status", ["offen", "in_pruefung"]);
-  const emps = await supabaseClient.from("employees").select("id", { count: "exact", head: true });
+  const emps = await supabaseClient.from("employees").select("id", { count: "exact", head: true }).eq("active", true);
   const resetLogs = await supabaseClient.from("password_reset_activity").select("id", { count: "exact", head: true });
 
   document.getElementById("vehicleCount").textContent = vehicles.count ?? "-";
@@ -246,12 +283,7 @@ async function sendReset(emailFromButton = null) {
   }
 
   showBox(resetMsg, "Reset-Link wurde gesendet an: " + email, true);
-
-  await supabaseClient.from("password_reset_activity").insert([{
-    email,
-    status: "reset_mail_sent",
-    details: "Admin hat Passwort-Reset-Mail gesendet"
-  }]);
+  await writeAdminLog("reset_mail_sent", "Admin hat Passwort-Reset-Mail gesendet", email);
 
   await loadLogs();
   await loadDashboard();
@@ -269,9 +301,12 @@ async function createEmployee() {
     return;
   }
 
-  const insertData = { name };
-  if (email) insertData.email = email;
-  insertData.role = role;
+  const insertData = {
+    name,
+    email: email || null,
+    role,
+    active: true
+  };
 
   const { error } = await supabaseClient.from("employees").insert([insertData]);
 
@@ -281,6 +316,7 @@ async function createEmployee() {
   }
 
   showBox(employeeMsg, "Mitarbeiter wurde gespeichert.", true);
+  await writeAdminLog("employee_created", "Mitarbeiter wurde angelegt: " + name, email || null);
 
   document.getElementById("newEmployeeName").value = "";
   document.getElementById("newEmployeeEmail").value = "";
@@ -309,22 +345,48 @@ function getEmployeeRole(e) {
   return e.role || "user";
 }
 
+function isEmployeeActive(e) {
+  return e.active !== false;
+}
+
 function renderEmployees() {
   const search = document.getElementById("employeeSearch").value.toLowerCase().trim();
-  const data = employees.filter(e => JSON.stringify(e).toLowerCase().includes(search));
+  const filter = document.getElementById("employeeFilter").value;
+
+  const data = employees.filter(e => {
+    const searchable = JSON.stringify(e).toLowerCase();
+    const active = isEmployeeActive(e);
+    const role = getEmployeeRole(e);
+
+    const matchesSearch = !search || searchable.includes(search);
+    const matchesFilter =
+      filter === "all" ||
+      (filter === "active" && active) ||
+      (filter === "inactive" && !active) ||
+      (filter === "admin" && role === "admin");
+
+    return matchesSearch && matchesFilter;
+  });
 
   employeesBox.innerHTML = data.map(e => {
     const role = getEmployeeRole(e);
+    const active = isEmployeeActive(e);
+
     return `
-      <div class="row">
-        <div class="tag ${role === "admin" ? "admin" : ""}">${role === "admin" ? "Admin" : "Mitarbeiter"}</div>
+      <div class="row ${active ? "" : "inactive"}">
+        <div class="tag ${role === "admin" ? "admin" : ""} ${active ? "" : "inactive"}">
+          ${active ? (role === "admin" ? "Admin" : "Mitarbeiter") : "Deaktiviert"}
+        </div>
         <div><strong>${e.name || "-"}</strong></div>
         <div class="small-text">ID: ${e.id}</div>
         ${e.email ? `<div class="small-text">E-Mail: ${e.email}</div>` : `<div class="small-text">Keine E-Mail hinterlegt</div>`}
         <div class="row-actions">
           <button class="btn small secondary" onclick="openEditModal(${e.id})">Bearbeiten</button>
           ${e.email ? `<button class="btn small" onclick="sendReset('${e.email}')">Reset senden</button>` : ""}
-          <button class="btn small danger" onclick="deleteEmployee(${e.id})">Löschen</button>
+          ${active
+            ? `<button class="btn small warning" onclick="toggleEmployeeActive(${e.id}, false)">Deaktivieren</button>`
+            : `<button class="btn small success" onclick="toggleEmployeeActive(${e.id}, true)">Aktivieren</button>`
+          }
         </div>
       </div>
     `;
@@ -339,6 +401,7 @@ function openEditModal(id) {
   document.getElementById("editName").value = e.name || "";
   document.getElementById("editEmail").value = e.email || "";
   document.getElementById("editRole").value = e.role || "user";
+  document.getElementById("editActive").value = isEmployeeActive(e) ? "true" : "false";
   document.getElementById("editModal").style.display = "flex";
 }
 
@@ -351,14 +414,19 @@ async function saveEmployeeEdit() {
   const name = document.getElementById("editName").value.trim();
   const email = document.getElementById("editEmail").value.trim();
   const role = document.getElementById("editRole").value;
+  const active = document.getElementById("editActive").value === "true";
 
   if (!name) {
     alert("Name darf nicht leer sein.");
     return;
   }
 
-  const updateData = { name, role };
-  updateData.email = email || null;
+  const updateData = {
+    name,
+    email: email || null,
+    role,
+    active
+  };
 
   const { error } = await supabaseClient
     .from("employees")
@@ -370,26 +438,34 @@ async function saveEmployeeEdit() {
     return;
   }
 
+  await writeAdminLog("employee_updated", "Mitarbeiter wurde bearbeitet: " + name, email || null);
+
   closeEditModal();
   await loadEmployees();
   await loadDashboard();
 }
 
-async function deleteEmployee(id) {
+async function toggleEmployeeActive(id, active) {
   const e = employees.find(x => Number(x.id) === Number(id));
   const name = e?.name || "Mitarbeiter";
 
-  if (!confirm(name + " wirklich löschen?")) return;
+  const question = active
+    ? name + " wieder aktivieren?"
+    : name + " deaktivieren? Er bleibt in der Historie erhalten.";
+
+  if (!confirm(question)) return;
 
   const { error } = await supabaseClient
     .from("employees")
-    .delete()
+    .update({ active })
     .eq("id", Number(id));
 
   if (error) {
     alert("Fehler: " + error.message);
     return;
   }
+
+  await writeAdminLog(active ? "employee_activated" : "employee_deactivated", name, e?.email || null);
 
   await loadEmployees();
   await loadDashboard();
@@ -400,7 +476,7 @@ async function loadLogs() {
     .from("password_reset_activity")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(150);
 
   if (error) {
     logsBox.innerHTML = `<div class="error">Logs konnten nicht geladen werden: ${error.message}</div>`;
@@ -431,6 +507,7 @@ async function logout() {
 }
 
 document.getElementById("employeeSearch").addEventListener("input", renderEmployees);
+document.getElementById("employeeFilter").addEventListener("change", renderEmployees);
 document.getElementById("logSearch").addEventListener("input", renderLogs);
 
 init();
