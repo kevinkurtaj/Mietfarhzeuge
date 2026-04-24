@@ -6,46 +6,175 @@
 <title>Historie</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="icon" href="data:,">
 
 <style>
-body { font-family: Arial; margin:0; background:#f4f6f8; }
+* {
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #eef2f7 0%, #dbe4ee 100%);
+  color: #111827;
+  min-height: 100vh;
+}
 
 header {
-  background:white;
-  padding:15px;
-  border-bottom:1px solid #ddd;
+  background: rgba(255,255,255,0.92);
+  padding: 18px 28px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-main { padding:20px; max-width:900px; margin:auto; }
+header a {
+  color: #111827;
+  text-decoration: none;
+  font-weight: 700;
+  background: #f3f4f6;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+main {
+  max-width: 1000px;
+  margin: auto;
+  padding: 30px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 30px;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 22px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+input, select {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+input {
+  flex: 1;
+  min-width: 240px;
+}
 
 .card {
-  background:white;
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:10px;
-  cursor:pointer;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+  cursor: pointer;
+  transition: 0.18s ease;
 }
 
-.tag { padding:4px 8px; border-radius:8px; font-size:12px; }
-.vehicle { background:#dbeafe; color:#1d4ed8; }
-.damage { background:#fee2e2; color:#991b1b; }
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+}
+
+.tag {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.vehicle {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.damage {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.time {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.details {
+  color: #374151;
+  font-size: 14px;
+}
+
+.empty, .error {
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.error {
+  color: #991b1b;
+  background: #fef2f2;
+}
 
 .modal {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  justify-content:center;
-  align-items:center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 .modal-box {
-  background:white;
-  padding:20px;
-  border-radius:16px;
-  width:90%;
-  max-width:400px;
+  background: white;
+  width: 100%;
+  max-width: 460px;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 25px 70px rgba(0,0,0,0.25);
+}
+
+.modal-box h2 {
+  margin-top: 0;
+}
+
+.modal-row {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.close-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border: none;
+  background: #111827;
+  color: white;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -53,118 +182,245 @@ main { padding:20px; max-width:900px; margin:auto; }
 <body>
 
 <header>
-<a href="index.html">← Zurück</a>
-<h2>Historie</h2>
+  <a id="backLink" href="index.html">← Zurück</a>
+  <strong>Fahrzeughistorie</strong>
 </header>
 
 <main>
+  <h1>Historie</h1>
+  <div class="subtitle">Alle Fahrzeugstatus-Änderungen und Schadensereignisse</div>
 
-<input id="search" placeholder="Suche">
+  <div class="toolbar">
+    <input id="search" placeholder="Suche in Details, Aktion oder Typ ...">
+    <select id="filter">
+      <option value="all">Alle Einträge</option>
+      <option value="vehicle">Nur Fahrzeugstatus</option>
+      <option value="damage">Nur Schäden</option>
+    </select>
+  </div>
 
-<div id="historyApp"></div>
-
+  <div id="historyApp" class="empty">Historie wird geladen ...</div>
 </main>
 
 <div id="modal" class="modal">
-<div class="modal-box">
-<div id="modalContent"></div>
-<button onclick="closeModal()">Schließen</button>
-</div>
+  <div class="modal-box">
+    <div id="modalContent"></div>
+    <button class="close-btn" onclick="closeModal()">Schließen</button>
+  </div>
 </div>
 
 <script>
-const supabase = window.supabase.createClient(
-"https://iufkwovepjljycdulnwa.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY"
-);
+const SUPABASE_URL = "https://iufkwovepjljycdulnwa.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY";
 
-let allData=[];
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// LOAD
-async function load(){
+const params = new URLSearchParams(window.location.search);
+const vehicleId = params.get("id");
 
-const vehicleId = new URLSearchParams(window.location.search).get("id");
+const historyApp = document.getElementById("historyApp");
+const searchInput = document.getElementById("search");
+const filterSelect = document.getElementById("filter");
+const backLink = document.getElementById("backLink");
 
-const { data: vh } = await supabase.from("vehicle_history").select("*").eq("vehicle_id", vehicleId);
-const { data: dmg } = await supabase.from("damages").select("id").eq("vehicle_id", vehicleId);
+let allData = [];
 
-let dh = [];
+if (vehicleId) {
+  backLink.href = "vehicle.html?id=" + vehicleId;
+}
 
-if (dmg && dmg.length > 0) {
+function formatDateTime(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("de-DE");
+}
 
-  const ids = dmg.map(d => d.id);
+function formatType(type) {
+  return type === "vehicle" ? "Fahrzeug" : "Schaden";
+}
 
-  const res = await supabase
-    .from("damage_history")
+function formatAction(action) {
+  switch (action) {
+    case "fahrzeugstatus_geaendert": return "Fahrzeugstatus geändert";
+    case "status_geaendert": return "Fahrzeugstatus geändert";
+    case "angelegt": return "Schaden angelegt";
+    case "bilder_hochgeladen": return "Bilder hochgeladen";
+    case "repariert": return "Schaden repariert";
+    case "irrtuemlich": return "Schaden irrtümlich";
+    default: return action || "-";
+  }
+}
+
+function getTag(item) {
+  if (item.type === "vehicle") {
+    return { css: "vehicle", text: "🚗 Fahrzeug" };
+  }
+
+  if (item.action === "repariert") {
+    return { css: "success", text: "✅ Schaden" };
+  }
+
+  return { css: "damage", text: "⚠️ Schaden" };
+}
+
+async function load() {
+  if (!vehicleId) {
+    historyApp.className = "error";
+    historyApp.innerHTML = "Keine Fahrzeug-ID gefunden.";
+    return;
+  }
+
+  // 1. Fahrzeugstatus-Historie laden
+  const { data: vehicleHistory, error: vehicleHistoryError } = await supabase
+    .from("vehicle_history")
     .select("*")
-    .in("damage_id", ids);
+    .eq("vehicle_id", Number(vehicleId));
 
-  dh = res.data || [];
+  if (vehicleHistoryError) {
+    historyApp.className = "error";
+    historyApp.innerHTML = "Fehler bei vehicle_history: " + vehicleHistoryError.message;
+    return;
+  }
+
+  // 2. Schäden dieses Fahrzeugs laden
+  const { data: damages, error: damagesError } = await supabase
+    .from("damages")
+    .select("id, vehicle_id")
+    .eq("vehicle_id", Number(vehicleId));
+
+  if (damagesError) {
+    historyApp.className = "error";
+    historyApp.innerHTML = "Fehler bei damages: " + damagesError.message;
+    return;
+  }
+
+  const damageIds = (damages || []).map(d => d.id);
+
+  // 3. Damage-History über damage_id laden
+  let damageHistory = [];
+
+  if (damageIds.length > 0) {
+    const { data: damageHistoryData, error: damageHistoryError } = await supabase
+      .from("damage_history")
+      .select("*")
+      .in("damage_id", damageIds);
+
+    if (damageHistoryError) {
+      historyApp.className = "error";
+      historyApp.innerHTML = "Fehler bei damage_history: " + damageHistoryError.message;
+      return;
+    }
+
+    damageHistory = damageHistoryData || [];
+  }
+
+  // 4. Alles zusammenführen
+  allData = [
+    ...(vehicleHistory || []).map(item => ({
+      ...item,
+      type: "vehicle"
+    })),
+    ...(damageHistory || []).map(item => ({
+      ...item,
+      type: "damage"
+    }))
+  ];
+
+  if (allData.length === 0) {
+    historyApp.className = "empty";
+    historyApp.innerHTML =
+      "Keine Historie gefunden.<br><br>" +
+      "Fahrzeug-ID: " + vehicleId + "<br>" +
+      "Gefundene Schäden: " + damageIds.length + "<br>" +
+      "Fahrzeugstatus-Einträge: " + (vehicleHistory || []).length;
+    return;
+  }
+
+  render();
 }
 
-allData=[
-...(vh||[]).map(i=>({...i,type:"vehicle"})),
-...(dh||[]).map(i=>({...i,type:"damage"}))
-];
+function render() {
+  const search = searchInput.value.toLowerCase().trim();
+  const filter = filterSelect.value;
 
-render();
+  let data = allData.filter(item => {
+    const searchable = [
+      item.type,
+      item.action,
+      item.details,
+      item.damage_id,
+      item.vehicle_id
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = !search || searchable.includes(search);
+    const matchesFilter = filter === "all" || item.type === filter;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (data.length === 0) {
+    historyApp.className = "empty";
+    historyApp.innerHTML = "Keine passenden Einträge gefunden.";
+    return;
+  }
+
+  historyApp.className = "";
+
+  historyApp.innerHTML = data.map((item, index) => {
+    const tag = getTag(item);
+
+    return `
+      <div class="card" onclick="openModal(${allData.indexOf(item)})">
+        <div class="tag ${tag.css}">
+          ${tag.text} • ${formatAction(item.action)}
+        </div>
+        <div class="time">${formatDateTime(item.created_at)}</div>
+        <div class="details">${item.details || "-"}</div>
+      </div>
+    `;
+  }).join("");
 }
 
-// RENDER
-function render(){
+async function openModal(index) {
+  const item = allData[index];
+  if (!item) return;
 
-const search=document.getElementById("search").value.toLowerCase();
+  let employeeName = "Unbekannt";
 
-let data = allData.filter(i=>{
-return (!search || (i.details||"").toLowerCase().includes(search));
-});
+  if (item.user_id) {
+    const { data } = await supabase
+      .from("employees")
+      .select("name")
+      .eq("id", item.user_id)
+      .single();
 
-data.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    if (data && data.name) {
+      employeeName = data.name;
+    }
+  }
 
-document.getElementById("historyApp").innerHTML=data.map((item,i)=>{
+  document.getElementById("modalContent").innerHTML = `
+    <h2>Detailansicht</h2>
 
-let tag="vehicle", label="🚗 Fahrzeug";
-if(item.type==="damage"){ tag="damage"; label="⚠️ Schaden"; }
+    <div class="modal-row"><strong>Typ:</strong> ${formatType(item.type)}</div>
+    <div class="modal-row"><strong>Aktion:</strong> ${formatAction(item.action)}</div>
+    <div class="modal-row"><strong>Mitarbeiter:</strong> ${employeeName}</div>
+    <div class="modal-row"><strong>Zeitpunkt:</strong> ${formatDateTime(item.created_at)}</div>
+    ${item.vehicle_id ? `<div class="modal-row"><strong>Fahrzeug-ID:</strong> ${item.vehicle_id}</div>` : ""}
+    ${item.damage_id ? `<div class="modal-row"><strong>Schaden-ID:</strong> ${item.damage_id}</div>` : ""}
+    <div class="modal-row"><strong>Details:</strong><br>${item.details || "-"}</div>
+  `;
 
-return `
-<div class="card" onclick="openModal(${i})">
-<div class="tag ${tag}">${label} • ${item.action}</div>
-<div>${new Date(item.created_at).toLocaleString()}</div>
-<div>${item.details||""}</div>
-</div>
-`;
-
-}).join("");
+  document.getElementById("modal").style.display = "flex";
 }
 
-// MODAL
-async function openModal(i){
-
-const item=allData[i];
-
-let name="Unbekannt";
-if(item.user_id){
-const { data } = await supabase.from("employees").select("name").eq("id",item.user_id).single();
-if(data) name=data.name;
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
 }
 
-document.getElementById("modalContent").innerHTML=`
-<h3>Detail</h3>
-<p><b>Typ:</b> ${item.type}</p>
-<p><b>Aktion:</b> ${item.action}</p>
-<p><b>Mitarbeiter:</b> ${name}</p>
-<p><b>Zeit:</b> ${new Date(item.created_at).toLocaleString()}</p>
-<p>${item.details||""}</p>
-`;
-
-document.getElementById("modal").style.display="flex";
-}
-
-function closeModal(){
-document.getElementById("modal").style.display="none";
-}
-
-document.getElementById("search").addEventListener("input",render);
+searchInput.addEventListener("input", render);
+filterSelect.addEventListener("change", render);
 
 load();
 </script>
