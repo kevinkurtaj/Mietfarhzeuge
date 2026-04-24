@@ -7,211 +7,73 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="icon" href="data:,">
 <style>
-* {
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{
+  margin:0;
+  background:radial-gradient(circle at top right,rgba(37,99,235,.16),transparent 35%),
+  linear-gradient(135deg,#f8fafc 0%,#e2e8f0 100%);
+  color:#111827;min-height:100vh
 }
-
-body {
-  margin: 0;
-  background:
-    radial-gradient(circle at top right, rgba(37,99,235,0.16), transparent 35%),
-    linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  color: #111827;
-  min-height: 100vh;
+header{
+  background:rgba(255,255,255,.92);backdrop-filter:blur(14px);
+  border-bottom:1px solid #e5e7eb;padding:18px 30px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 10px 30px rgba(15,23,42,.06)
 }
-
-header {
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid #e5e7eb;
-  padding: 18px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+.header-title{font-size:21px;font-weight:900}
+.header-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  border:none;background:#111827;color:white;padding:10px 14px;
+  border-radius:12px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block
 }
-
-.header-title {
-  font-size: 21px;
-  font-weight: 900;
+.btn.secondary{background:#e5e7eb;color:#111827}
+.btn.danger{background:#991b1b;color:white}
+.btn.small{padding:8px 10px;font-size:12px}
+main{max-width:1180px;margin:auto;padding:32px}
+.hero{margin-bottom:22px}
+.hero h1{margin:0;font-size:36px;letter-spacing:-.7px}
+.hero p{margin:8px 0 0;color:#64748b}
+.auth-card,.card,.stat{
+  background:rgba(255,255,255,.96);border:1px solid #e5e7eb;
+  box-shadow:0 14px 34px rgba(15,23,42,.07)
 }
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+.auth-card{border-radius:24px;padding:18px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.stat{border-radius:22px;padding:20px}
+.stat .label{font-size:13px;color:#64748b;margin-bottom:8px;font-weight:800}
+.stat strong{font-size:32px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{border-radius:24px;padding:20px;margin-bottom:18px}
+.card h2{margin:0 0 14px}
+input,select{
+  width:100%;padding:13px 14px;border-radius:14px;border:1px solid #cbd5e1;
+  margin-bottom:10px;outline:none;background:white
 }
-
-.btn {
-  border: none;
-  background: #111827;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-weight: 900;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
+input:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.14)}
+.table{display:grid;gap:10px;max-height:520px;overflow:auto}
+.row{border:1px solid #e5e7eb;border-radius:16px;padding:13px;background:#f8fafc}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.small-text{font-size:12px;color:#64748b;margin-top:3px}
+.tag{
+  display:inline-block;border-radius:999px;padding:5px 9px;font-size:12px;
+  font-weight:900;background:#dbeafe;color:#1d4ed8;margin-bottom:7px
 }
-
-.btn.secondary {
-  background: #e5e7eb;
-  color: #111827;
+.tag.admin{background:#dcfce7;color:#166534}
+.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:16px;padding:14px}
+.success{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:14px;margin-top:10px;display:none}
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:50
 }
-
-main {
-  max-width: 1180px;
-  margin: auto;
-  padding: 32px;
+.modal-box{
+  width:100%;max-width:470px;background:white;border-radius:24px;padding:24px;
+  box-shadow:0 30px 90px rgba(0,0,0,.28)
 }
-
-.hero {
-  margin-bottom: 22px;
-}
-
-.hero h1 {
-  margin: 0;
-  font-size: 36px;
-  letter-spacing: -0.7px;
-}
-
-.hero p {
-  margin: 8px 0 0;
-  color: #64748b;
-}
-
-.auth-card {
-  background: rgba(255,255,255,0.95);
-  border: 1px solid #e5e7eb;
-  border-radius: 24px;
-  padding: 18px;
-  margin-bottom: 18px;
-  box-shadow: 0 14px 34px rgba(15,23,42,0.07);
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.stat {
-  background: rgba(255,255,255,0.96);
-  border: 1px solid #e5e7eb;
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: 0 14px 34px rgba(15,23,42,0.07);
-}
-
-.stat .label {
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 8px;
-  font-weight: 800;
-}
-
-.stat strong {
-  font-size: 32px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
-.card {
-  background: rgba(255,255,255,0.96);
-  border: 1px solid #e5e7eb;
-  border-radius: 24px;
-  padding: 20px;
-  box-shadow: 0 14px 34px rgba(15,23,42,0.07);
-  margin-bottom: 18px;
-}
-
-.card h2 {
-  margin: 0 0 14px;
-}
-
-input {
-  width: 100%;
-  padding: 13px 14px;
-  border-radius: 14px;
-  border: 1px solid #cbd5e1;
-  margin-bottom: 10px;
-  outline: none;
-}
-
-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37,99,235,0.14);
-}
-
-.table {
-  display: grid;
-  gap: 10px;
-  max-height: 460px;
-  overflow: auto;
-}
-
-.row {
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 13px;
-  background: #f8fafc;
-}
-
-.small {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 3px;
-}
-
-.tag {
-  display: inline-block;
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 12px;
-  font-weight: 900;
-  background: #dbeafe;
-  color: #1d4ed8;
-  margin-bottom: 7px;
-}
-
-.error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-  border-radius: 16px;
-  padding: 14px;
-}
-
-.success {
-  background: #ecfdf5;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  border-radius: 16px;
-  padding: 14px;
-  margin-top: 10px;
-  display: none;
-}
-
-@media(max-width:850px) {
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  main {
-    padding: 20px;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
-  }
+.modal-box h2{margin:0 0 16px}
+@media(max-width:850px){
+  header{flex-direction:column;align-items:flex-start;gap:12px}
+  main{padding:20px}
+  .grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -228,29 +90,17 @@ input:focus {
 <main>
   <div class="hero">
     <h1>Administration</h1>
-    <p>Dashboard, Mitarbeiter, Passwort-Reset und Sicherheitsprotokoll.</p>
+    <p>Dashboard, Mitarbeiterverwaltung, Passwort-Reset und Sicherheitsprotokoll.</p>
   </div>
 
   <div id="authBox" class="auth-card">Prüfe Anmeldung ...</div>
 
   <div id="adminApp" style="display:none;">
     <div class="stats">
-      <div class="stat">
-        <div class="label">Fahrzeuge</div>
-        <strong id="vehicleCount">-</strong>
-      </div>
-      <div class="stat">
-        <div class="label">Aktive Schäden</div>
-        <strong id="damageCount">-</strong>
-      </div>
-      <div class="stat">
-        <div class="label">Mitarbeiter</div>
-        <strong id="employeeCount">-</strong>
-      </div>
-      <div class="stat">
-        <div class="label">Reset Logs</div>
-        <strong id="logCount">-</strong>
-      </div>
+      <div class="stat"><div class="label">Fahrzeuge</div><strong id="vehicleCount">-</strong></div>
+      <div class="stat"><div class="label">Aktive Schäden</div><strong id="damageCount">-</strong></div>
+      <div class="stat"><div class="label">Mitarbeiter</div><strong id="employeeCount">-</strong></div>
+      <div class="stat"><div class="label">Reset Logs</div><strong id="logCount">-</strong></div>
     </div>
 
     <section class="card">
@@ -258,6 +108,21 @@ input:focus {
       <input id="resetEmail" type="email" placeholder="E-Mail-Adresse des Mitarbeiters">
       <button class="btn" onclick="sendReset()">Reset-Link senden</button>
       <div id="resetMsg" class="success"></div>
+      <div class="small-text" style="margin-top:10px;">
+        Hinweis: Aus Sicherheitsgründen wird kein Passwort direkt im Browser gesetzt. Der Mitarbeiter bekommt einen Reset-Link und vergibt selbst ein neues Passwort.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Mitarbeiter anlegen</h2>
+      <input id="newEmployeeName" placeholder="Name">
+      <input id="newEmployeeEmail" type="email" placeholder="E-Mail optional">
+      <select id="newEmployeeRole">
+        <option value="user">Mitarbeiter</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="btn" onclick="createEmployee()">Mitarbeiter speichern</button>
+      <div id="employeeMsg" class="success"></div>
     </section>
 
     <div class="grid">
@@ -276,11 +141,32 @@ input:focus {
   </div>
 </main>
 
+<div id="editModal" class="modal">
+  <div class="modal-box">
+    <h2>Mitarbeiter bearbeiten</h2>
+    <input id="editId" type="hidden">
+    <label>Name</label>
+    <input id="editName">
+    <label>E-Mail</label>
+    <input id="editEmail" type="email">
+    <label>Rolle</label>
+    <select id="editRole">
+      <option value="user">Mitarbeiter</option>
+      <option value="admin">Admin</option>
+    </select>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button class="btn" onclick="saveEmployeeEdit()">Speichern</button>
+      <button class="btn secondary" onclick="closeEditModal()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = "https://iufkwovepjljycdulnwa.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Das ist deine einfache Admin-Rolle.
 const ADMIN_EMAILS = [
   "kevin.kurtaj@moebel-inhofer.de",
   "kevinkurtaj@gmx.de"
@@ -291,12 +177,19 @@ const adminApp = document.getElementById("adminApp");
 const employeesBox = document.getElementById("employeesBox");
 const logsBox = document.getElementById("logsBox");
 const resetMsg = document.getElementById("resetMsg");
+const employeeMsg = document.getElementById("employeeMsg");
 
 let employees = [];
 let logs = [];
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleString("de-DE") : "-";
+}
+
+function showBox(el, text, success = true) {
+  el.className = success ? "success" : "error";
+  el.style.display = "block";
+  el.textContent = text;
 }
 
 async function init() {
@@ -334,8 +227,8 @@ async function loadDashboard() {
   document.getElementById("logCount").textContent = resetLogs.count ?? "-";
 }
 
-async function sendReset() {
-  const email = document.getElementById("resetEmail").value.trim();
+async function sendReset(emailFromButton = null) {
+  const email = (emailFromButton || document.getElementById("resetEmail").value).trim();
   resetMsg.style.display = "none";
 
   if (!email) {
@@ -348,15 +241,11 @@ async function sendReset() {
   });
 
   if (error) {
-    resetMsg.className = "error";
-    resetMsg.style.display = "block";
-    resetMsg.textContent = "Fehler: " + error.message;
+    showBox(resetMsg, "Fehler: " + error.message, false);
     return;
   }
 
-  resetMsg.className = "success";
-  resetMsg.style.display = "block";
-  resetMsg.textContent = "Reset-Link wurde gesendet an: " + email;
+  showBox(resetMsg, "Reset-Link wurde gesendet an: " + email, true);
 
   await supabaseClient.from("password_reset_activity").insert([{
     email,
@@ -365,6 +254,39 @@ async function sendReset() {
   }]);
 
   await loadLogs();
+  await loadDashboard();
+}
+
+async function createEmployee() {
+  const name = document.getElementById("newEmployeeName").value.trim();
+  const email = document.getElementById("newEmployeeEmail").value.trim();
+  const role = document.getElementById("newEmployeeRole").value;
+
+  employeeMsg.style.display = "none";
+
+  if (!name) {
+    showBox(employeeMsg, "Bitte Namen eingeben.", false);
+    return;
+  }
+
+  const insertData = { name };
+  if (email) insertData.email = email;
+  insertData.role = role;
+
+  const { error } = await supabaseClient.from("employees").insert([insertData]);
+
+  if (error) {
+    showBox(employeeMsg, "Fehler: " + error.message, false);
+    return;
+  }
+
+  showBox(employeeMsg, "Mitarbeiter wurde gespeichert.", true);
+
+  document.getElementById("newEmployeeName").value = "";
+  document.getElementById("newEmployeeEmail").value = "";
+  document.getElementById("newEmployeeRole").value = "user";
+
+  await loadEmployees();
   await loadDashboard();
 }
 
@@ -383,18 +305,94 @@ async function loadEmployees() {
   renderEmployees();
 }
 
+function getEmployeeRole(e) {
+  return e.role || "user";
+}
+
 function renderEmployees() {
   const search = document.getElementById("employeeSearch").value.toLowerCase().trim();
   const data = employees.filter(e => JSON.stringify(e).toLowerCase().includes(search));
 
-  employeesBox.innerHTML = data.map(e => `
-    <div class="row">
-      <div class="tag">Mitarbeiter</div>
-      <div><strong>${e.name || "-"}</strong></div>
-      <div class="small">ID: ${e.id}</div>
-      ${e.email ? `<div class="small">E-Mail: ${e.email}</div>` : ""}
-    </div>
-  `).join("") || "Keine Mitarbeiter gefunden.";
+  employeesBox.innerHTML = data.map(e => {
+    const role = getEmployeeRole(e);
+    return `
+      <div class="row">
+        <div class="tag ${role === "admin" ? "admin" : ""}">${role === "admin" ? "Admin" : "Mitarbeiter"}</div>
+        <div><strong>${e.name || "-"}</strong></div>
+        <div class="small-text">ID: ${e.id}</div>
+        ${e.email ? `<div class="small-text">E-Mail: ${e.email}</div>` : `<div class="small-text">Keine E-Mail hinterlegt</div>`}
+        <div class="row-actions">
+          <button class="btn small secondary" onclick="openEditModal(${e.id})">Bearbeiten</button>
+          ${e.email ? `<button class="btn small" onclick="sendReset('${e.email}')">Reset senden</button>` : ""}
+          <button class="btn small danger" onclick="deleteEmployee(${e.id})">Löschen</button>
+        </div>
+      </div>
+    `;
+  }).join("") || "Keine Mitarbeiter gefunden.";
+}
+
+function openEditModal(id) {
+  const e = employees.find(x => Number(x.id) === Number(id));
+  if (!e) return;
+
+  document.getElementById("editId").value = e.id;
+  document.getElementById("editName").value = e.name || "";
+  document.getElementById("editEmail").value = e.email || "";
+  document.getElementById("editRole").value = e.role || "user";
+  document.getElementById("editModal").style.display = "flex";
+}
+
+function closeEditModal() {
+  document.getElementById("editModal").style.display = "none";
+}
+
+async function saveEmployeeEdit() {
+  const id = document.getElementById("editId").value;
+  const name = document.getElementById("editName").value.trim();
+  const email = document.getElementById("editEmail").value.trim();
+  const role = document.getElementById("editRole").value;
+
+  if (!name) {
+    alert("Name darf nicht leer sein.");
+    return;
+  }
+
+  const updateData = { name, role };
+  updateData.email = email || null;
+
+  const { error } = await supabaseClient
+    .from("employees")
+    .update(updateData)
+    .eq("id", Number(id));
+
+  if (error) {
+    alert("Fehler: " + error.message);
+    return;
+  }
+
+  closeEditModal();
+  await loadEmployees();
+  await loadDashboard();
+}
+
+async function deleteEmployee(id) {
+  const e = employees.find(x => Number(x.id) === Number(id));
+  const name = e?.name || "Mitarbeiter";
+
+  if (!confirm(name + " wirklich löschen?")) return;
+
+  const { error } = await supabaseClient
+    .from("employees")
+    .delete()
+    .eq("id", Number(id));
+
+  if (error) {
+    alert("Fehler: " + error.message);
+    return;
+  }
+
+  await loadEmployees();
+  await loadDashboard();
 }
 
 async function loadLogs() {
@@ -422,7 +420,7 @@ function renderLogs() {
       <div class="tag">${l.status || "log"}</div>
       <div><strong>${l.email || "Unbekannt"}</strong></div>
       <div>${l.details || "-"}</div>
-      <div class="small">${formatDate(l.created_at)}</div>
+      <div class="small-text">${formatDate(l.created_at)}</div>
     </div>
   `).join("") || "Keine Logs gefunden.";
 }
