@@ -4,231 +4,459 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fahrzeug</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f1f5f9;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  color: #111827;
 }
 
-header{
-  display:flex;
-  justify-content:space-between;
-  padding:20px;
-  background:white;
-  border-bottom:1px solid #ddd;
+header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-main{
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 28px;
 }
 
-.card{
-  background:white;
-  padding:20px;
-  border-radius:15px;
-  margin-bottom:15px;
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.08);
 }
 
-input,select,textarea{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
 }
 
-button{
-  padding:10px 15px;
-  border:none;
-  background:black;
-  color:white;
-  border-radius:10px;
-  cursor:pointer;
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  box-sizing: border-box;
 }
 
-.row{
-  border:1px solid #ddd;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
+textarea {
+  min-height: 80px;
 }
 
-.zone{
-  padding:8px;
-  background:#3b82f6;
-  color:white;
-  border-radius:10px;
-  cursor:pointer;
-  display:inline-block;
-  margin:5px;
+button, .btn {
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
 }
 
+.btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.zone {
+  display: inline-block;
+  background: #2563eb;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.damage {
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.small {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.success {
+  background: #dcfce7;
+  color: #166534;
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.employee {
+  display: inline-block;
+  background: #eef2ff;
+  color: #3730a3;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 6px;
+}
+
+@media(max-width:800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <button onclick="location.href='index.html'">← Zurück</button>
-  <div id="userInfo"></div>
+  <button class="btn-secondary" onclick="location.href='index.html'">← Zurück</button>
+  <div id="userInfo">Lade Benutzer...</div>
   <button onclick="logout()">Logout</button>
 </header>
 
 <main>
 
-<h2 id="vehicleTitle">Lädt...</h2>
+<h1 id="vehicleTitle">Fahrzeug wird geladen...</h1>
+<p id="vehicleSub" class="small"></p>
 
 <div class="card">
-  <b>Zonen auswählen:</b><br>
+  <h3>Zonen auswählen</h3>
   <div class="zone" onclick="setArea('vorne')">vorne</div>
   <div class="zone" onclick="setArea('hinten')">hinten</div>
   <div class="zone" onclick="setArea('Seite')">Seite</div>
   <div class="zone" onclick="setArea('Dach')">Dach</div>
+  <div class="zone" onclick="setArea('Innenraum')">Innenraum</div>
+</div>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>Schaden hinzufügen</h2>
+
+    <input id="type" placeholder="z.B. Kratzer">
+    <input id="area" placeholder="z.B. vorne">
+
+    <select id="severity">
+      <option value="leicht">leicht</option>
+      <option value="mittel">mittel</option>
+      <option value="schwer">schwer</option>
+    </select>
+
+    <textarea id="description" placeholder="Beschreibung"></textarea>
+
+    <button onclick="saveDamage()">Schaden speichern</button>
+
+    <div id="message"></div>
+  </div>
+
+  <div class="card">
+    <h2>Fahrzeugstatus</h2>
+
+    <select id="vehicleStatus">
+      <option value="einsatzbereit">einsatzbereit</option>
+      <option value="abruf">Abruf / Reserve</option>
+      <option value="werkstatt">Werkstatt</option>
+      <option value="nicht_einsatzbereit">nicht einsatzbereit</option>
+      <option value="nicht_im_einsatz">nicht im Einsatz</option>
+    </select>
+
+    <textarea id="statusNote" placeholder="Notiz optional"></textarea>
+
+    <button onclick="saveStatus()">Status speichern</button>
+
+    <br><br>
+    <button class="btn-secondary" onclick="location.href='history.html?id=' + vehicleId">
+      Historie öffnen
+    </button>
+
+    <div id="statusMessage"></div>
+  </div>
+
 </div>
 
 <div class="card">
-  <h3>Schaden hinzufügen</h3>
-
-  <input id="type" placeholder="z.B Kratzer">
-  <input id="area" placeholder="z.B vorne">
-
-  <select id="severity">
-    <option value="leicht">leicht</option>
-    <option value="mittel">mittel</option>
-    <option value="schwer">schwer</option>
-  </select>
-
-  <textarea id="desc" placeholder="Beschreibung"></textarea>
-
-  <button onclick="addDamage()">Speichern</button>
-  <div id="msg"></div>
-</div>
-
-<div class="card">
-  <h3>Aktive Schäden</h3>
-  <div id="damageList"></div>
+  <h2>Aktive Schäden</h2>
+  <div id="damageList">Schäden werden geladen...</div>
 </div>
 
 </main>
 
 <script>
-
 const SUPABASE_URL = "https://iufkwovepjljycdulnwa.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY";
 
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const vehicleId = new URLSearchParams(location.search).get("id");
+const vehicleId = new URLSearchParams(window.location.search).get("id");
 
-let currentUser;
-let employee;
+let currentUser = null;
+let currentEmployee = null;
+let employeesMap = {};
 
-function setArea(a){
-  document.getElementById("area").value = a;
+function setArea(area) {
+  document.getElementById("area").value = area;
 }
 
-async function init(){
-  const { data } = await db.auth.getSession();
-  currentUser = data.session?.user;
+function showMessage(id, text, type = "success") {
+  document.getElementById(id).innerHTML = `<div class="${type}">${text}</div>`;
+}
 
-  if(!currentUser){
-    location.href="index.html";
+function formatDate(value) {
+  return value ? new Date(value).toLocaleString("de-DE") : "-";
+}
+
+async function init() {
+  const { data: sessionData } = await db.auth.getSession();
+  currentUser = sessionData.session?.user;
+
+  if (!currentUser) {
+    location.href = "index.html";
     return;
   }
 
-  const empRes = await db.from("employees")
+  const { data: employee } = await db
+    .from("employees")
     .select("*")
     .eq("email", currentUser.email)
-    .single();
+    .maybeSingle();
 
-  employee = empRes.data;
+  currentEmployee = employee;
 
-  document.getElementById("userInfo").innerText =
-    "👤 " + (employee?.name || currentUser.email);
+  if (!currentEmployee) {
+    document.getElementById("userInfo").innerHTML = "⚠ Kein Mitarbeiter gefunden";
+  } else {
+    document.getElementById("userInfo").innerHTML = "👤 " + currentEmployee.name;
+  }
 
-  loadVehicle();
-  loadDamages();
+  await loadEmployees();
+  await loadVehicle();
+  await loadDamages();
 }
 
-async function loadVehicle(){
-  const { data } = await db.from("vehicles")
+async function loadEmployees() {
+  const { data } = await db.from("employees").select("*");
+
+  employeesMap = {};
+  (data || []).forEach(emp => {
+    employeesMap[emp.id] = emp.name || emp.email || "Mitarbeiter " + emp.id;
+  });
+}
+
+function employeeName(id) {
+  return employeesMap[id] || "Unbekannt";
+}
+
+async function loadVehicle() {
+  const { data, error } = await db
+    .from("vehicles")
     .select("*")
-    .eq("id", vehicleId)
-    .single();
+    .eq("id", Number(vehicleId))
+    .maybeSingle();
 
-  document.getElementById("vehicleTitle").innerText =
-    data.name + " (" + data.kennzeichen + ")";
-}
-
-async function loadDamages(){
-  const { data } = await db.from("damages")
-    .select("*")
-    .eq("vehicle_id", vehicleId)
-    .eq("status","offen");
-
-  document.getElementById("damageList").innerHTML =
-    data.map(d=>`
-      <div class="row">
-        <b>${d.damage_type}</b><br>
-        ${d.area} | ${d.severity}
-      </div>
-    `).join("") || "Keine Schäden";
-}
-
-async function addDamage(){
-
-  const type = document.getElementById("type").value;
-  const area = document.getElementById("area").value;
-  const severity = document.getElementById("severity").value;
-  const desc = document.getElementById("desc").value;
-
-  if(!employee){
-    alert("Kein Mitarbeiter gefunden!");
+  if (error || !data) {
+    document.getElementById("vehicleTitle").innerText = "Fahrzeug nicht gefunden";
     return;
   }
 
-  const { data, error } = await db.from("damages").insert([{
-    vehicle_id: Number(vehicleId),
-    damage_type:type,
-    area,
-    severity,
-    description:desc,
-    status:"offen",
-    employee_id: employee.id,
-    user_id: currentUser.id
-  }]).select().single();
+  document.getElementById("vehicleTitle").innerText =
+    (data.name || "Fahrzeug") + (data.kennzeichen ? " (" + data.kennzeichen + ")" : "");
 
-  if(error){
-    document.getElementById("msg").innerText = error.message;
+  document.getElementById("vehicleSub").innerText = "Fahrzeug-ID: " + data.id;
+
+  document.getElementById("vehicleStatus").value = data.status || "einsatzbereit";
+}
+
+async function loadDamages() {
+  const { data, error } = await db
+    .from("damages")
+    .select("*")
+    .eq("vehicle_id", Number(vehicleId))
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    document.getElementById("damageList").innerHTML =
+      `<div class="error">${error.message}</div>`;
+    return;
+  }
+
+  const active = (data || []).filter(d =>
+    d.status !== "repariert" && d.status !== "irrtuemlich"
+  );
+
+  if (active.length === 0) {
+    document.getElementById("damageList").innerHTML = "Keine aktiven Schäden.";
+    return;
+  }
+
+  document.getElementById("damageList").innerHTML = active.map(d => `
+    <div class="damage">
+      <strong>${d.damage_type || "-"}</strong><br>
+      ${d.area || "-"} · ${d.severity || "-"}<br>
+      <div class="employee">👤 Gemeldet von: ${employeeName(d.employee_id)}</div>
+      <div class="small">${formatDate(d.created_at)}</div>
+      <p>${d.description || ""}</p>
+
+      <button onclick="markDamage(${d.id}, 'repariert')">Repariert</button>
+      <button onclick="markDamage(${d.id}, 'irrtuemlich')">Irrtümlich</button>
+    </div>
+  `).join("");
+}
+
+async function saveDamage() {
+  const type = document.getElementById("type").value.trim();
+  const area = document.getElementById("area").value.trim();
+  const severity = document.getElementById("severity").value;
+  const description = document.getElementById("description").value.trim();
+
+  if (!type || !area) {
+    showMessage("message", "Bitte Schadensart und Bereich eingeben.", "error");
+    return;
+  }
+
+  if (!currentUser) {
+    showMessage("message", "Nicht eingeloggt.", "error");
+    return;
+  }
+
+  if (!currentEmployee) {
+    showMessage(
+      "message",
+      "Kein Mitarbeiter zu deinem Login gefunden. Prüfe employees.email.",
+      "error"
+    );
+    return;
+  }
+
+  const { data: damage, error } = await db
+    .from("damages")
+    .insert([{
+      vehicle_id: Number(vehicleId),
+      damage_type: type,
+      area: area,
+      severity: severity,
+      description: description,
+      status: "offen",
+      user_id: currentUser.id,
+      employee_id: currentEmployee.id
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    showMessage("message", "Fehler: " + error.message, "error");
+    return;
+  }
+
+  const { error: historyError } = await db
+    .from("damage_history")
+    .insert([{
+      damage_id: damage.id,
+      action: "angelegt",
+      details: "Schaden angelegt: " + type + " / " + area,
+      user_id: currentEmployee.id,
+      auth_user_id: currentUser.id
+    }]);
+
+  if (historyError) {
+    console.error(historyError);
+    showMessage("message", "Schaden gespeichert, aber Historie Fehler: " + historyError.message, "error");
+    return;
+  }
+
+  showMessage("message", "✅ Schaden gespeichert. Gemeldet von: " + currentEmployee.name);
+
+  document.getElementById("type").value = "";
+  document.getElementById("area").value = "";
+  document.getElementById("description").value = "";
+
+  await loadDamages();
+}
+
+async function saveStatus() {
+  const status = document.getElementById("vehicleStatus").value;
+  const note = document.getElementById("statusNote").value.trim();
+
+  const { error } = await db
+    .from("vehicles")
+    .update({ status: status })
+    .eq("id", Number(vehicleId));
+
+  if (error) {
+    showMessage("statusMessage", "Fehler: " + error.message, "error");
+    return;
+  }
+
+  await db.from("vehicle_history").insert([{
+    vehicle_id: Number(vehicleId),
+    action: "fahrzeugstatus_geaendert",
+    details: note || status,
+    user_id: currentEmployee?.id || null,
+    auth_user_id: currentUser?.id || null
+  }]);
+
+  showMessage("statusMessage", "✅ Status gespeichert.");
+}
+
+async function markDamage(id, status) {
+  const note = prompt(
+    status === "repariert"
+      ? "Notiz zur Reparatur:"
+      : "Warum irrtümlich?"
+  ) || status;
+
+  const { error } = await db
+    .from("damages")
+    .update({ status: status })
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
     return;
   }
 
   await db.from("damage_history").insert([{
-    damage_id:data.id,
-    action:"angelegt",
-    details:type+" "+area,
-    user_id:employee.id,
-    auth_user_id:currentUser.id
+    damage_id: id,
+    action: status,
+    details: note,
+    user_id: currentEmployee?.id || null,
+    auth_user_id: currentUser?.id || null
   }]);
 
-  document.getElementById("msg").innerText="✔ gespeichert";
-
-  loadDamages();
+  await loadDamages();
 }
 
-async function logout(){
+async function logout() {
   await db.auth.signOut();
-  location.href="index.html";
+  location.href = "index.html";
 }
 
 init();
-
 </script>
 
 </body>
