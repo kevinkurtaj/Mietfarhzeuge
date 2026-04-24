@@ -9,18 +9,14 @@
 
 <style>
 body { font-family: Arial; margin:0; background:#f4f6f8; }
-header { background:white; padding:15px; border-bottom:1px solid #ddd; }
-main { padding:20px; max-width:900px; margin:auto; }
 
-input, select, button {
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  margin:5px 0;
-  width:100%;
+header {
+  background:white;
+  padding:15px;
+  border-bottom:1px solid #ddd;
 }
 
-button { cursor:pointer; }
+main { padding:20px; max-width:900px; margin:auto; }
 
 .card {
   background:white;
@@ -30,10 +26,9 @@ button { cursor:pointer; }
   cursor:pointer;
 }
 
-.tag { padding:4px 8px; border-radius:8px; font-size:12px; font-weight:bold; }
+.tag { padding:4px 8px; border-radius:8px; font-size:12px; }
 .vehicle { background:#dbeafe; color:#1d4ed8; }
 .damage { background:#fee2e2; color:#991b1b; }
-.success { background:#dcfce7; color:#166534; }
 
 .modal {
   position:fixed;
@@ -58,32 +53,15 @@ button { cursor:pointer; }
 <body>
 
 <header>
-<h2>Fahrzeug Historie</h2>
+<a href="index.html">← Zurück</a>
+<h2>Historie</h2>
 </header>
 
 <main>
 
-<!-- LOGIN -->
-<div id="loginBox">
-<h3>Login</h3>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Passwort">
-<button onclick="login()">Login</button>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none">
-
-<input id="searchInput" placeholder="Suche">
-<select id="filter">
-<option value="all">Alle</option>
-<option value="vehicle">Fahrzeug</option>
-<option value="damage">Schaden</option>
-</select>
+<input id="search" placeholder="Suche">
 
 <div id="historyApp"></div>
-
-</div>
 
 </main>
 
@@ -97,58 +75,24 @@ button { cursor:pointer; }
 <script>
 const supabase = window.supabase.createClient(
 "https://iufkwovepjljycdulnwa.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1Zmt3b3ZlcGpsanljZHVsbndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5Mjc5MDQsImV4cCI6MjA5MjUwMzkwNH0.LucPsaYa2iNOzQmbn-7ECNxi-ATEj3_mrHvJfEvDfmY"
 );
 
-let allData = [];
+let allData=[];
 
-// LOGIN
-async function login(){
-const email = document.getElementById("email").value;
-const password = document.getElementById("password").value;
-
-const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-if(error){
-alert("Login fehlgeschlagen");
-return;
-}
-
-startApp();
-}
-
-// START APP
-function startApp(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("app").style.display="block";
-loadHistory();
-}
-
-// HISTORY
-async function loadHistory(){
+// LOAD
+async function load(){
 
 const vehicleId = new URLSearchParams(window.location.search).get("id");
 
-const { data: vh } = await supabase
-.from("vehicle_history")
-.select("*")
-.eq("vehicle_id", vehicleId);
-
-const { data: dmg } = await supabase
-.from("damages")
-.select("id")
-.eq("vehicle_id", vehicleId);
-
-const ids = (dmg||[]).map(d=>d.id);
+const { data: vh } = await supabase.from("vehicle_history").select("*").eq("vehicle_id", vehicleId);
+const { data: dmg } = await supabase.from("damages").select("id").eq("vehicle_id", vehicleId);
 
 let dh=[];
-if(ids.length){
-const res = await supabase
-.from("damage_history")
-.select("*")
-.in("damage_id", ids);
-
-dh = res.data||[];
+if(dmg){
+const ids=dmg.map(d=>d.id);
+const res = await supabase.from("damage_history").select("*").in("damage_id", ids);
+dh=res.data||[];
 }
 
 allData=[
@@ -162,28 +106,21 @@ render();
 // RENDER
 function render(){
 
-const search=document.getElementById("searchInput").value.toLowerCase();
-const filter=document.getElementById("filter").value;
+const search=document.getElementById("search").value.toLowerCase();
 
 let data = allData.filter(i=>{
-return (!search || (i.details||"").toLowerCase().includes(search)) &&
-(filter==="all" || i.type===filter);
+return (!search || (i.details||"").toLowerCase().includes(search));
 });
 
 data.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
-document.getElementById("historyApp").innerHTML = data.map((item,index)=>{
+document.getElementById("historyApp").innerHTML=data.map((item,i)=>{
 
 let tag="vehicle", label="🚗 Fahrzeug";
-
-if(item.type==="damage"){
-label="⚠️ Schaden";
-tag="damage";
-if(item.action==="repariert") tag="success";
-}
+if(item.type==="damage"){ tag="damage"; label="⚠️ Schaden"; }
 
 return `
-<div class="card" onclick="openModal(${index})">
+<div class="card" onclick="openModal(${i})">
 <div class="tag ${tag}">${label} • ${item.action}</div>
 <div>${new Date(item.created_at).toLocaleString()}</div>
 <div>${item.details||""}</div>
@@ -194,19 +131,13 @@ return `
 }
 
 // MODAL
-async function openModal(index){
+async function openModal(i){
 
-const item = allData[index];
+const item=allData[i];
 
 let name="Unbekannt";
-
 if(item.user_id){
-const { data } = await supabase
-.from("employees")
-.select("name")
-.eq("id", item.user_id)
-.single();
-
+const { data } = await supabase.from("employees").select("name").eq("id",item.user_id).single();
 if(data) name=data.name;
 }
 
@@ -216,7 +147,7 @@ document.getElementById("modalContent").innerHTML=`
 <p><b>Aktion:</b> ${item.action}</p>
 <p><b>Mitarbeiter:</b> ${name}</p>
 <p><b>Zeit:</b> ${new Date(item.created_at).toLocaleString()}</p>
-<p><b>Details:</b><br>${item.details||"-"}</p>
+<p>${item.details||""}</p>
 `;
 
 document.getElementById("modal").style.display="flex";
@@ -226,8 +157,9 @@ function closeModal(){
 document.getElementById("modal").style.display="none";
 }
 
-document.getElementById("searchInput").addEventListener("input",render);
-document.getElementById("filter").addEventListener("change",render);
+document.getElementById("search").addEventListener("input",render);
+
+load();
 </script>
 
 </body>
